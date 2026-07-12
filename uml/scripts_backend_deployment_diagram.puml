@@ -1,0 +1,50 @@
+@startuml Physical Deployment Diagram
+title Diagrama de Despliegue Físico - Buscador y Notificador de Empleos (scripts-backend)
+
+left to right direction
+
+node "Google Cloud Platform (GCP)" {
+    
+    node "Región: southamerica-west1 (Santiago, Chile)" {
+        
+        node "Cloud Run Service" {
+            component "FastAPI Backend Container\n[Port 8080]" as run_container
+        }
+        
+        node "Cloud Scheduler Job" as scheduler {
+            component "Cron Trigger" as trigger
+        }
+        
+        trigger --> run_container : "HTTP GET /scripts/run-job-finder\n(OIDC Token / Secure Header)"
+    }
+    
+    node "GCP Global / Multi-Region" {
+        database "Cloud Firestore\n(Native Mode NoSQL)" as firestore {
+            folder "sent_jobs collection" as col
+        }
+        
+        run_container --> firestore : "gcloud NoSQL SDK\n(ADC Credentials)"
+    }
+}
+
+node "Servicios Externos (Internet)" {
+    node "Portal Empleos Públicos" as portal {
+        component "apiConvocatorias.ashx" as portal_api
+    }
+    
+    node "Google Gmail Servers" as gmail_smtp {
+        component "SMTP Relay\n[Port 587 (STARTTLS)]" as smtp
+    }
+}
+
+node "Clientes Finales" {
+    actor "Kinesiólogos" as user1
+    actor "Matronas" as user2
+}
+
+run_container --> portal_api : "HTTPS GET Request"
+run_container --> smtp : "SMTP Authentication"
+smtp --> user1 : "Email Notification"
+smtp --> user2 : "Email Notification"
+
+@enduml

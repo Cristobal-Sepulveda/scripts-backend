@@ -1,0 +1,84 @@
+@startuml Package Diagram
+title Diagrama de Paquetes - Buscador y Notificador de Empleos (scripts-backend)
+
+package "Workspace Root" {
+    
+    package "uml" {
+        file "class_diagram.puml"
+        file "component_diagram.puml"
+        file "sequence_diagram.puml"
+        file "communication_diagram.puml"
+        file "activity_diagram.puml"
+        file "package_diagram.puml"
+        file "deployment_diagram.puml"
+        file "use_cases.puml"
+        file "c4_model.puml"
+    }
+
+    package "backend" {
+        file "main.py"
+        file "requirements.txt"
+        file "Dockerfile"
+        file ".dockerignore"
+        file ".env"
+        
+        package "controllers" {
+            file "scripts_controller.py"
+        }
+        
+        package "domain" {
+            package "domain.repositories" {
+                file "job_repository.py"
+                file "job_datasource.py"
+            }
+            package "domain.services" {
+                file "email_service.py"
+            }
+            package "domain.usecases" {
+                file "run_job_finder_usecase.py"
+            }
+        }
+        
+        package "data" {
+            package "data.repositories" {
+                file "firestore_job_repository.py"
+            }
+            package "data.services" {
+                file "gmail_email_service.py"
+            }
+            package "data.network" {
+                file "portal_client.py"
+            }
+        }
+        
+        package "infrastructure" {
+            file "config.py"
+            file "middleware.py"
+            file "dependencies.py"
+        }
+        
+        package "docs" {
+            file "examen_arquitectura.pdf"
+        }
+    }
+}
+
+"controllers" ..> "domain" : depends on
+"controllers" ..> "infrastructure" : depends on
+
+"infrastructure" ..> "data" : depends on
+"infrastructure" ..> "domain" : depends on
+
+"domain.usecases" ..> "domain.repositories" : depends on
+"domain.usecases" ..> "domain.services" : depends on
+"domain.usecases" ..> "data.network" : depends on
+"domain.usecases" ..> "infrastructure" : depends on
+
+"data.repositories" ..> "domain.repositories" : implements
+"data.services" ..> "domain.services" : implements
+"data.network" ..> "infrastructure" : depends on
+
+"main.py" ..> "controllers" : depends on
+"main.py" ..> "infrastructure" : depends on
+
+@enduml

@@ -1,0 +1,163 @@
+@startuml Class Diagram
+title Diagrama de Clases - Buscador y Notificador de Empleos (scripts-backend)
+
+package "Presentation" {
+    class main {
+        + app : FastAPI
+        --
+        + root() : dict
+    }
+    
+    package "controllers" {
+        class scripts_controller {
+            + router : APIRouter
+            + db : FirestoreClient
+            --
+            + run_job_finder() : dict
+        }
+    }
+}
+
+package "Domain" {
+    package "entities" {
+        class Job {
+            + cargo : str
+            + url : str
+            + entidad : str
+            + region : str
+            + ciudad : str
+            + times_sent : int
+            + active : bool
+            --
+            + doc_id : str
+            + can_be_sent : bool
+        }
+    }
+
+    package "usecases" {
+        class RunJobFinderUseCase {
+            - job_repository : JobRepository
+            - email_service : EmailService
+            - portal_client : JobDataSource
+            --
+            + execute() : void
+        }
+    }
+    
+    package "repositories" {
+        interface JobRepository {
+            --
+            + check_and_filter_already_sent(jobs: list[Job]) : list[Job]
+            + increment_sent_count(jobs: list[Job]) : void
+            + cleanup_inactive_jobs(active_urls: set[str]) : void
+        }
+        
+        interface JobDataSource {
+            --
+            + fetch_all_active_jobs() : list[dict]
+            + filter_jobs(items: list[dict], pattern: Pattern) : list[Job]
+        }
+    }
+    
+    package "services" {
+        interface EmailService {
+            --
+            + __enter__() : EmailService
+            + __exit__(exc_type, exc_val, exc_tb) : void
+            + send_email(recipients: list[str], subject: str, body: str) : bool
+            + get_sender_email() : str
+        }
+    }
+}
+
+package "Data" {
+    package "data.repositories" {
+        class FirestoreJobRepository {
+            - db : FirestoreClient
+            --
+            + check_and_filter_already_sent(jobs: list[Job]) : list[Job]
+            + increment_sent_count(jobs: list[Job]) : void
+            + cleanup_inactive_jobs(active_urls: set[str]) : void
+        }
+    }
+    
+    package "data.services" {
+        class GmailEmailService {
+            - email_user : str
+            - email_pass : str
+            - server : SMTP
+            --
+            + __enter__() : GmailEmailService
+            + __exit__(exc_type, exc_val, exc_tb) : void
+            + send_email(recipients: list[str], subject: str, body: str) : bool
+            + get_sender_email() : str
+        }
+    }
+    
+    package "data.network" {
+        class PortalClient {
+            --
+            + is_in_santiago_province(region: str, city: str) : bool
+            + fetch_all_active_jobs() : list[dict]
+            + filter_jobs(items: list[dict], pattern: Pattern) : list[Job]
+        }
+    }
+}
+
+package "Infrastructure" {
+    class config {
+        + JOBS_PORTAL_URL : str
+        + PORTAL_HEADERS : dict
+        + KINE_PATTERN : Pattern
+        + MATRON_PATTERN : Pattern
+        + KINE_RECIPIENTS : list[str]
+        + MATRON_RECIPIENTS : list[str]
+        + SANTIAGO_PROVINCE_COMMUNES : set[str]
+    }
+    
+    class middleware {
+        --
+        + register_logging_middleware(app: FastAPI) : void
+        + verify_security_from_google_cloud_scheduler_task(request: Request) : void
+     }
+     
+     class dependencies {
+         + db_client : FirestoreClient
+         --
+         + get_db() : FirestoreClient
+         + get_job_repository(db) : FirestoreJobRepository
+         + get_email_service() : GmailEmailService
+         + get_portal_client() : JobDataSource
+         + get_run_job_finder_usecase(repository, email_service, portal_client) : RunJobFinderUseCase
+     }
+}
+
+main --> scripts_controller : "registra"
+main ..> middleware : "registra logs"
+scripts_controller ..> middleware : "usa verify_security"
+scripts_controller ..> RunJobFinderUseCase : "ejecuta"
+scripts_controller ..> dependencies : "usa Depends"
+
+dependencies ..> FirestoreJobRepository : "instancia"
+dependencies ..> GmailEmailService : "instancia"
+dependencies ..> PortalClient : "instancia"
+dependencies ..> RunJobFinderUseCase : "instancia"
+
+RunJobFinderUseCase --> JobRepository : "usa"
+RunJobFinderUseCase --> EmailService : "usa"
+RunJobFinderUseCase --> JobDataSource : "usa"
+
+FirestoreJobRepository ..|> JobRepository : "implementa"
+GmailEmailService ..|> EmailService : "implementa"
+PortalClient ..|> JobDataSource : "implementa"
+
+RunJobFinderUseCase ..> config : "lee constantes"
+PortalClient ..> config : "lee constantes"
+
+JobRepository ..> Job : "usa"
+JobDataSource ..> Job : "usa"
+PortalClient ..> Job : "crea"
+FirestoreJobRepository ..> Job : "usa"
+RunJobFinderUseCase ..> Job : "usa"
+
+@enduml

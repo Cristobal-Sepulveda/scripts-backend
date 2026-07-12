@@ -1,0 +1,60 @@
+@startuml Use Cases Diagram
+title Diagrama de Casos de Uso - Buscador y Notificador de Empleos (scripts-backend)
+
+left to right direction
+
+' --- Caso de Uso Genérico ---
+package "Sistema de Notificación de Empleos - Genérico" {
+    usecase "Buscar y Notificar Ofertas de Empleos Públicos" as UC_Generic
+}
+
+actor "Cloud Scheduler" as Actor_Scheduler
+Actor_Scheduler --> UC_Generic
+
+' --- Casos de Uso Detallados ---
+package "Casos de Uso Detallados" {
+    
+    ' Detalle 1: Scraping, Filtrado y Notificación
+    usecase "UC1: Ejecutar Búsqueda y Notificación Diaria" as UC_DailyRun
+    usecase "Extraer ofertas desde API externa" as UC_Extract
+    usecase "Filtrar por carrera y Provincia de Santiago" as UC_Filter
+    usecase "Validar en base de datos si ya fue notificado" as UC_ValidateDB
+    usecase "Incrementar contador de envíos" as UC_IncCount
+    usecase "Enviar correos consolidados vía SMTP" as UC_SendEmail
+    
+    ' Relaciones para UC1
+    UC_DailyRun ..> UC_Extract : <<include>>
+    UC_DailyRun ..> UC_Filter : <<include>>
+    UC_DailyRun ..> UC_ValidateDB : <<include>>
+    UC_DailyRun ..> UC_SendEmail : <<include>>
+    UC_SendEmail ..> UC_IncCount : <<include>>
+    
+    ' Detalle 2: Limpieza de Base de Datos
+    usecase "UC2: Realizar Limpieza de Ofertas Cerradas" as UC_Cleanup
+    usecase "Stream de documentos Firestore" as UC_StreamFS
+    usecase "Identificar ofertas inexistentes en portal" as UC_IdentifyClosed
+    usecase "Eliminar documento de Firestore" as UC_DeleteFS
+    
+    ' Relaciones para UC2
+    UC_Cleanup ..> UC_StreamFS : <<include>>
+    UC_Cleanup ..> UC_IdentifyClosed : <<include>>
+    UC_Cleanup ..> UC_DeleteFS : <<include>>
+}
+
+' Asociaciones de Actores
+Actor_Scheduler --> UC_DailyRun
+Actor_Scheduler --> UC_Cleanup
+
+actor "Empleos Públicos API" as API_External
+actor "Servidor SMTP Gmail" as SMTP_Server
+actor "Cloud Firestore" as DB_Firestore
+
+UC_Extract --> API_External
+UC_ValidateDB --> DB_Firestore
+UC_IncCount --> DB_Firestore
+UC_SendEmail --> SMTP_Server
+
+UC_StreamFS --> DB_Firestore
+UC_DeleteFS --> DB_Firestore
+
+@enduml

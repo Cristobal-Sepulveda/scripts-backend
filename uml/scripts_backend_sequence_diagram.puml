@@ -1,0 +1,133 @@
+@startuml Sequence Diagram
+title Diagrama de Secuencia - Buscador y Notificador de Empleos (scripts-backend)
+
+actor "Cloud Scheduler" as scheduler
+participant "scripts_controller\n(FastAPI)" as router
+participant "middleware\n(verify_security)" as mid
+participant "RunJobFinderUseCase\n(Domain UseCase)" as uc
+participant "PortalClient\n(Data Network)" as client
+participant "FirestoreJobRepository\n(Data DB)" as repo
+database "Firestore DB" as db
+participant "GmailEmailService\n(Data Service)" as mail
+entity "Gmail SMTP Server" as smtp
+
+scheduler -> router: HTTP GET /scripts/run-job-finder
+activate router
+
+router -> mid: verify_security_from_google_cloud_scheduler_task(request)
+activate mid
+mid --> router: Verification success
+deactivate mid
+
+router -> repo: instantiate FirestoreJobRepository(db)
+router -> mail: instantiate GmailEmailService(user, pass)
+router -> client: instantiate PortalClient()
+
+router -> uc: execute(usecase)
+activate uc
+
+uc -> client: fetch_all_active_jobs()
+activate client
+client --> uc: list[dict] (all_items)
+deactivate client
+
+uc -> client: filter_jobs(all_items, KINE_PATTERN)
+activate client
+client --> uc: list[Job] (kine_jobs_raw)
+deactivate client
+
+uc -> repo: check_and_filter_already_sent(kine_jobs_raw)
+activate repo
+loop Para cada oferta
+    repo -> db: Consultar doc por Hash SHA-256 (URL)
+    activate db
+    db --> repo: Retorna times_sent (o None)
+    deactivate db
+end
+repo --> uc: list[Job] (kine_jobs)
+deactivate repo
+
+uc -> client: filter_jobs(all_items, MATRON_PATTERN)
+activate client
+client --> uc: list[Job] (matron_jobs_raw)
+deactivate client
+
+uc -> repo: check_and_filter_already_sent(matron_jobs_raw)
+activate repo
+loop Para cada oferta
+    repo -> db: Consultar doc por Hash SHA-256 (URL)
+    activate db
+    db --> repo: Retorna times_sent (o None)
+    deactivate db
+end
+repo --> uc: list[Job] (matron_jobs)
+deactivate repo
+
+uc -> mail: Context Manager: __enter__()
+activate mail
+mail -> smtp: Conectar smtp.gmail.com:587, starttls(), login()
+activate smtp
+smtp --> mail: Conectado y autenticado
+deactivate smtp
+mail --> uc: active session
+deactivate mail
+
+alt Hay ofertas de Kinesiólogo a enviar
+    uc -> mail: send_email(kine_recipients, subject, kine_body)
+    activate mail
+    mail -> smtp: Dispatch email
+    smtp --> mail: OK
+    mail --> uc: true
+    deactivate mail
+    
+    uc -> repo: increment_sent_count(kine_jobs)
+    activate repo
+    repo -> db: Guardar/Incrementar times_sent
+    deactivate repo
+else No hay ofertas nuevas
+    uc -> mail: send_email(kine_recipients, subject, "No hay ofertas...")
+    activate mail
+    mail -> smtp: Dispatch email
+    smtp --> mail: OK
+    mail --> uc: true
+    deactivate mail
+end
+
+alt Hay ofertas de Matrón(a) a enviar
+    uc -> mail: send_email(matron_recipients, subject, matron_body)
+    activate mail
+    mail -> smtp: Dispatch email
+    smtp --> mail: OK
+    mail --> uc: true
+    deactivate mail
+    
+    uc -> repo: increment_sent_count(matron_jobs)
+    activate repo
+    repo -> db: Guardar/Incrementar times_sent
+    deactivate repo
+else No hay ofertas nuevas
+    uc -> mail: send_email(matron_recipients, subject, "No hay ofertas...")
+    activate mail
+    mail -> smtp: Dispatch email
+    smtp --> mail: OK
+    mail --> uc: true
+    deactivate mail
+end
+
+uc -> repo: cleanup_inactive_jobs(active_urls)
+activate repo
+repo -> db: Eliminar ofertas inactivas de Firestore
+deactivate repo
+
+uc -> mail: Context Manager: __exit__()
+activate mail
+mail -> smtp: quit()
+deactivate mail
+
+uc --> router: Executed successfully
+deactivate uc
+
+router --> scheduler: HTTP 200 OK (Status success)
+deactivate router
+
+@enduml

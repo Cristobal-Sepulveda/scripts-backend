@@ -1,0 +1,32 @@
+@startuml Component Diagram
+title Diagrama de Componentes - Buscador y Notificador de Empleos (scripts-backend)
+
+[Cloud Scheduler] ..> [Scripts Controller] : HTTP GET /scripts/run-job-finder (Scheduler Headers)
+
+package "FastAPI Application Component" {
+    [Scripts Controller] ..> [Security Middleware] : "verify_security()"
+    [Scripts Controller] --> [RunJobFinderUseCase] : "execute()"
+    
+    [RunJobFinderUseCase] --> [JobRepository] : "Interface Outbound Port"
+    [RunJobFinderUseCase] --> [EmailService] : "Interface Outbound Port"
+    [RunJobFinderUseCase] --> [PortalClient] : "Interface Outbound Port"
+    
+    [FirestoreJobRepository] ..|> [JobRepository] : "implements"
+    [GmailEmailService] ..|> [EmailService] : "implements"
+    
+    [RunJobFinderUseCase] ..> [Infrastructure Config]
+    [PortalClient] ..> [Infrastructure Config]
+    
+    [FastAPI App Core] ..> [Logging Middleware] : "uses"
+}
+
+database "Google Cloud Firestore" {
+    [sent_jobs collection] as db_coll
+}
+
+[FirestoreJobRepository] --> db_coll : Read/Write (Firestore SDK)
+
+[PortalClient] ..> [Portal Empleos Públicos API] : HTTP GET (Requests JSON)
+[GmailEmailService] ..> [Gmail SMTP Server] : Port 587 (smtplib TLS)
+
+@enduml

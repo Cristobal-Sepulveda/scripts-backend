@@ -1,0 +1,63 @@
+@startuml Activity Diagram
+title Diagrama de Actividad - Buscador y Notificador de Empleos (scripts-backend)
+
+start
+:Recibir petición HTTP GET en /scripts/run-job-finder;
+
+:Validar cabeceras de seguridad;
+if (Es peticion local o proviene de Cloud Scheduler) then (Si)
+    :Cargar credenciales de entorno (EMAIL_USER, EMAIL_PASS);
+    if (Credenciales configuradas) then (Si)
+        :Invocar run_job_finder_workflow en el Controlador;
+        :Hacer HTTP GET al Portal de Empleos Públicos;
+        if (Respuesta exitosa) then (Si)
+            :Filtrar ofertas por carrera y por Provincia de Santiago (Comunas);
+            fork
+                :Filtrar ofertas para Kinesiologia;
+                :Consultar en Firestore las ofertas enviadas;
+                :Filtrar aquellas con times_sent < 2;
+                if (Hay ofertas nuevas) then (Si)
+                    :Generar cuerpo de correo consolidado de Kinesiologia;
+                else (No)
+                    :Generar cuerpo del correo "Sin ofertas nuevas";
+                endif
+            fork again
+                :Filtrar ofertas para Matron/a;
+                :Consultar en Firestore las ofertas enviadas;
+                :Filtrar aquellas con times_sent < 2;
+                if (Hay ofertas nuevas) then (Si)
+                    :Generar cuerpo de correo consolidado de Matron/a;
+                else (No)
+                    :Generar cuerpo del correo "Sin ofertas nuevas";
+                endif
+            end fork
+            
+            :Conectar y autenticar en Servidor SMTP de Gmail (TLS);
+            :Enviar correos consolidados a destinatarios;
+            
+            if (Se enviaron ofertas nuevas de Kinesiologia) then (Si)
+                :Incrementar times_sent en Firestore;
+            endif
+            if (Se enviaron ofertas nuevas de Matrona) then (Si)
+                :Incrementar times_sent en Firestore;
+            endif
+            
+            :Limpieza de Base de Datos:
+            Eliminar de Firestore registros de ofertas cerradas;
+            :Cerrar sesión SMTP;
+            :Retornar HTTP 200 OK con estado "success";
+        else (No)
+            :Logear error de conexión al portal;
+            :Retornar HTTP 500 Internal Server Error;
+        endif
+    else (No)
+        :Logear error de variables de entorno faltantes;
+        :Retornar HTTP 500 Internal Server Error;
+    endif
+else (No)
+    :Logear intento de acceso no autorizado;
+    :Retornar HTTP 403 Forbidden;
+endif
+stop
+
+@enduml
