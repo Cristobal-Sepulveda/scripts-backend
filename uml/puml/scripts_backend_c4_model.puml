@@ -3,7 +3,7 @@ title Diagrama C4 - Buscador y Notificador de Empleos (scripts-backend)
 
 actor "Destinatarios (Familia/Amigos)" as user
 
-rectangle "Cloud Scheduler" as scheduler
+rectangle "Google Cloud Scheduler" as scheduler
 
 rectangle "GCP - Cloud Run & Firestore" {
     rectangle "FastAPI Backend Application\n(Python / FastAPI)\n--\nOrquesta la consulta del portal, filtros y envíos." as api

@@ -3,6 +3,10 @@ from domain.entities.job import Job
 
 class JobRepository(ABC):
     @abstractmethod
+    def fetch_all_active_jobs(self) -> list[dict]:
+        pass
+    
+    @abstractmethod
     def check_and_filter_already_sent(self, jobs: list[Job]) -> list[Job]:
         pass
 

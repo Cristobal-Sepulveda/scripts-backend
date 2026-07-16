@@ -13,9 +13,9 @@ router = APIRouter(
 )
 
 @router.get("/run-job-finder", dependencies=[Depends(verify_security_from_google_cloud_scheduler_task)])
-async def run_job_finder(usecase: RunJobFinderUseCase = Depends(get_run_job_finder_usecase)):
+async def run_job_finder(runJobFinderUseCase: RunJobFinderUseCase = Depends(get_run_job_finder_usecase)):
     try:
-        usecase.execute()
+        runJobFinderUseCase.execute()
     except ValueError as ve:
         error_msg = str(ve)
         logger.error(error_msg)

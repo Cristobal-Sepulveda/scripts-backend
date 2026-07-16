@@ -4,15 +4,28 @@ title Diagrama de Paquetes - Buscador y Notificador de Empleos (scripts-backend)
 package "Workspace Root" {
     
     package "uml" {
-        file "class_diagram.puml"
-        file "component_diagram.puml"
-        file "sequence_diagram.puml"
-        file "communication_diagram.puml"
-        file "activity_diagram.puml"
-        file "package_diagram.puml"
-        file "deployment_diagram.puml"
-        file "use_cases.puml"
-        file "c4_model.puml"
+        package "puml" {
+            file "scripts_backend_class_diagram.puml"
+            file "scripts_backend_component_diagram.puml"
+            file "scripts_backend_sequence_diagram.puml"
+            file "scripts_backend_communication_diagram.puml"
+            file "scripts_backend_activity_diagram.puml"
+            file "scripts_backend_package_diagram.puml"
+            file "scripts_backend_deployment_diagram.puml"
+            file "scripts_backend_use_cases.puml"
+            file "scripts_backend_c4_model.puml"
+        }
+        package "images" {
+            file "scripts_backend_class_diagram.png"
+            file "scripts_backend_component_diagram.png"
+            file "scripts_backend_sequence_diagram.png"
+            file "scripts_backend_communication_diagram.png"
+            file "scripts_backend_activity_diagram.png"
+            file "scripts_backend_package_diagram.png"
+            file "scripts_backend_deployment_diagram.png"
+            file "scripts_backend_use_cases.png"
+            file "scripts_backend_c4_model.png"
+        }
     }
 
     package "backend" {
