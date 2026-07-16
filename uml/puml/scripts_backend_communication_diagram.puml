@@ -22,7 +22,7 @@ jobCtrl -> jobCtrl : 5: fetch_all_active_jobs()
 jobCtrl -> jobCtrl : 6: filter_jobs(items, pattern)
 
 jobCtrl -> dbCtrl : 7: check_and_filter_already_sent(db, filtered_jobs)
-dbCtrl -> db : 8: Consultar por Hash SHA-256
+dbCtrl -> db : 8: Consultar por URL
 db --> dbCtrl : 9: return times_sent
 dbCtrl --> jobCtrl : 10: return new_jobs_to_send
 

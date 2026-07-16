@@ -1,4 +1,3 @@
-import hashlib
 import logging
 from google.cloud import firestore
 from domain.repositories.job_repository import JobRepository
@@ -36,12 +35,10 @@ class JobRepositoryImpl(JobRepository):
             if not url:
                 continue
             
-            doc_id: str = self.calculate_sha256(url)
-            
             try:
-                doc_ref = self.db.collection("sent_jobs").document(doc_id)
-                doc = doc_ref.get()
-                if doc.exists:
+                docs = self.db.collection("sent_jobs").where(field_path="url", op_string="==", value=url).limit(1).get()
+                if docs:
+                    doc = docs[0]
                     data = doc.to_dict() or {}
                     times_sent: int = data.get("times_sent", 0)
                     if times_sent >= 2:
@@ -64,11 +61,10 @@ class JobRepositoryImpl(JobRepository):
             if not url:
                 continue
             
-            doc_id: str = self.calculate_sha256(url)
             try:
-                doc_ref = self.db.collection("sent_jobs").document(doc_id)
+                docs = self.db.collection("sent_jobs").where(field_path="url", op_string="==", value=url).limit(1).get()
                 new_times_sent: int = job.times_sent + 1
-                doc_ref.set({
+                data_to_save = {
                     "url": url,
                     "cargo": job.cargo,
                     "entidad": job.entidad,
@@ -77,7 +73,13 @@ class JobRepositoryImpl(JobRepository):
                     "times_sent": new_times_sent,
                     "updated_at": firestore.SERVER_TIMESTAMP,
                     "active": True
-                }, merge=True)
+                }
+                if docs:
+                    doc_ref = self.db.collection("sent_jobs").document(docs[0].id)
+                    doc_ref.set(document_data=data_to_save, merge=True)
+                else:
+                    doc_ref = self.db.collection("sent_jobs").document()
+                    doc_ref.set(data_to_save)
                 logger.info(f"Incrementado contador de envíos para {url} a {new_times_sent}")
             except Exception as e:
                 logger.error(f"Error actualizando contador en Firestore para {url}: {e}")
@@ -93,6 +95,3 @@ class JobRepositoryImpl(JobRepository):
                     self.db.collection("sent_jobs").document(doc.id).delete()
         except Exception as e:
             logger.error(f"Error durante la limpieza de ofertas inactivas: {e}")
-
-    def calculate_sha256(self, text: str) -> str:
-        return hashlib.sha256(text.encode("utf-8")).hexdigest()

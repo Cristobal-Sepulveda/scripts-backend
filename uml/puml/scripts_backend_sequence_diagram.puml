@@ -39,7 +39,7 @@ deactivate client
 uc -> repo: check_and_filter_already_sent(kine_jobs_raw)
 activate repo
 loop Para cada oferta
-    repo -> db: Consultar doc por Hash SHA-256 (URL)
+    repo -> db: Consultar doc por filtro URL
     activate db
     db --> repo: Retorna times_sent (o None)
     deactivate db
@@ -55,7 +55,7 @@ deactivate client
 uc -> repo: check_and_filter_already_sent(matron_jobs_raw)
 activate repo
 loop Para cada oferta
-    repo -> db: Consultar doc por Hash SHA-256 (URL)
+    repo -> db: Consultar doc por filtro URL
     activate db
     db --> repo: Retorna times_sent (o None)
     deactivate db
