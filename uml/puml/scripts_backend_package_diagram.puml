@@ -3,8 +3,8 @@ title Diagrama de Paquetes - Buscador y Notificador de Empleos (scripts-backend)
 
 package "Workspace Root" {
     
-    package "uml" {
-        package "puml" {
+    package "uml" as uml_pkg {
+        package "puml" as puml_pkg {
             file "scripts_backend_class_diagram.puml"
             file "scripts_backend_component_diagram.puml"
             file "scripts_backend_sequence_diagram.puml"
@@ -15,7 +15,7 @@ package "Workspace Root" {
             file "scripts_backend_use_cases.puml"
             file "scripts_backend_c4_model.puml"
         }
-        package "images" {
+        package "images" as images_pkg {
             file "scripts_backend_class_diagram.png"
             file "scripts_backend_component_diagram.png"
             file "scripts_backend_sequence_diagram.png"
@@ -28,70 +28,81 @@ package "Workspace Root" {
         }
     }
 
-    package "backend" {
+    package "backend" as backend_pkg {
         file "main.py"
         file "requirements.txt"
         file "Dockerfile"
         file ".dockerignore"
         file ".env"
         
-        package "controllers" {
+        package "controllers" as ctrl_pkg {
             file "scripts_controller.py"
         }
         
-        package "domain" {
-            package "domain.repositories" {
-                file "job_repository.py"
-                file "job_datasource.py"
+        package "domain" as dom_pkg {
+            package "domain.entities" as dom_entities {
+                file "job.py"
             }
-            package "domain.services" {
+            package "domain.exceptions" as dom_exceptions {
+                file "domain_exception.py"
+            }
+            package "domain.repositories" as dom_repos {
+                file "job_repository.py"
+            }
+            package "domain.services" as dom_services {
                 file "email_service.py"
             }
-            package "domain.usecases" {
-                file "run_job_finder_usecase.py"
+            package "domain.usecases" as dom_usecases {
+                file "run_kine_job_finder_usecase.py"
+                file "run_matron_job_finder_usecase.py"
+                file "cleanup_inactive_jobs_usecase.py"
             }
         }
         
-        package "data" {
-            package "data.repositories" {
-                file "firestore_job_repository.py"
+        package "data" as data_pkg {
+            package "data.model.dto" as data_dto {
+                file "sent_job_dto.py"
             }
-            package "data.services" {
+            package "data.repositories" as data_repos {
+                file "job_repository_impl.py"
+            }
+            package "data.services" as data_services {
                 file "gmail_email_service.py"
             }
-            package "data.network" {
+            package "data.network" as data_network {
                 file "portal_client.py"
             }
         }
         
-        package "infrastructure" {
+        package "infrastructure" as infra_pkg {
             file "config.py"
             file "middleware.py"
             file "dependencies.py"
         }
         
-        package "docs" {
+        package "docs" as docs_pkg {
             file "examen_arquitectura.pdf"
         }
     }
 }
 
-"controllers" ..> "domain" : depends on
-"controllers" ..> "infrastructure" : depends on
+ctrl_pkg ..> dom_pkg : depends on
+ctrl_pkg ..> infra_pkg : depends on
 
-"infrastructure" ..> "data" : depends on
-"infrastructure" ..> "domain" : depends on
+infra_pkg ..> data_pkg : depends on
+infra_pkg ..> dom_pkg : depends on
 
-"domain.usecases" ..> "domain.repositories" : depends on
-"domain.usecases" ..> "domain.services" : depends on
-"domain.usecases" ..> "data.network" : depends on
-"domain.usecases" ..> "infrastructure" : depends on
+dom_usecases ..> dom_repos : depends on
+dom_usecases ..> dom_services : depends on
+dom_usecases ..> dom_entities : depends on
+dom_usecases ..> infra_pkg : depends on
 
-"data.repositories" ..> "domain.repositories" : implements
-"data.services" ..> "domain.services" : implements
-"data.network" ..> "infrastructure" : depends on
+data_repos ..> dom_repos : implements
+data_repos ..> data_dto : depends on
+data_services ..> dom_services : implements
+data_network ..> infra_pkg : depends on
 
-"main.py" ..> "controllers" : depends on
-"main.py" ..> "infrastructure" : depends on
+backend_pkg ..> ctrl_pkg : depends on
+backend_pkg ..> infra_pkg : depends on
 
 @enduml

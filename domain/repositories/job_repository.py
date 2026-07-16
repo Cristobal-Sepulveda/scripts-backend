@@ -7,7 +7,7 @@ class JobRepository(ABC):
         pass
     
     @abstractmethod
-    def check_and_filter_already_sent(self, jobs: list[Job]) -> list[Job]:
+    def get_sent_job_by_url(self, url: str) -> Job | None:
         pass
 
     @abstractmethod

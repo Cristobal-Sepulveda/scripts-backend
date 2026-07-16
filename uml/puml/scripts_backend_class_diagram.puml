@@ -35,10 +35,26 @@ package "Domain" {
     }
 
     package "usecases" {
-        class RunJobFinderUseCase {
+        class RunKineJobFinderUseCase {
             - job_repository : JobRepository
             - email_service : EmailService
-            - portal_client : JobDataSource
+            --
+            + execute() : list[Job]
+            + filter_jobs(items: list[dict], pattern: Pattern) : list[Job]
+            + is_in_santiago_province(region: str, city: str) : bool
+        }
+
+        class RunMatronJobFinderUseCase {
+            - job_repository : JobRepository
+            - email_service : EmailService
+            --
+            + execute() : list[Job]
+            + filter_jobs(items: list[dict], pattern: Pattern) : list[Job]
+            + is_in_santiago_province(region: str, city: str) : bool
+        }
+
+        class CleanupInactiveJobsUseCase {
+            - job_repository : JobRepository
             --
             + execute() : void
         }
@@ -47,7 +63,7 @@ package "Domain" {
     package "repositories" {
         interface JobRepository {
             --
-            + check_and_filter_already_sent(jobs: list[Job]) : list[Job]
+            + get_sent_job_by_url(url: str) : Job | None
             + increment_sent_count(jobs: list[Job]) : void
             + cleanup_inactive_jobs(active_urls: set[str]) : void
         }
@@ -68,6 +84,23 @@ package "Domain" {
             + get_sender_email() : str
         }
     }
+    
+    package "exceptions" {
+        class DomainException {
+            + message : str
+            + status_code : int
+        }
+        class PortalConnectionError {
+        }
+        class DatabaseOperationError {
+        }
+        class EmailDispatchError {
+        }
+        
+        PortalConnectionError --|> DomainException
+        DatabaseOperationError --|> DomainException
+        EmailDispatchError --|> DomainException
+    }
 }
 
 package "Data" {
@@ -75,7 +108,7 @@ package "Data" {
         class FirestoreJobRepository {
             - db : FirestoreClient
             --
-            + check_and_filter_already_sent(jobs: list[Job]) : list[Job]
+            + get_sent_job_by_url(url: str) : Job | None
             + increment_sent_count(jobs: list[Job]) : void
             + cleanup_inactive_jobs(active_urls: set[str]) : void
         }
@@ -127,37 +160,48 @@ package "Infrastructure" {
          + get_db() : FirestoreClient
          + get_job_repository(db) : FirestoreJobRepository
          + get_email_service() : GmailEmailService
-         + get_portal_client() : JobDataSource
-         + get_run_job_finder_usecase(repository, email_service, portal_client) : RunJobFinderUseCase
+         + get_run_kine_job_finder_usecase(repository, email_service) : RunKineJobFinderUseCase
+         + get_run_matron_job_finder_usecase(repository, email_service) : RunMatronJobFinderUseCase
+         + get_cleanup_inactive_jobs_usecase(repository) : CleanupInactiveJobsUseCase
      }
 }
 
 main --> scripts_controller : "registra"
 main ..> middleware : "registra logs"
 scripts_controller ..> middleware : "usa verify_security"
-scripts_controller ..> RunJobFinderUseCase : "ejecuta"
+scripts_controller ..> RunKineJobFinderUseCase : "ejecuta"
+scripts_controller ..> RunMatronJobFinderUseCase : "ejecuta"
+scripts_controller ..> CleanupInactiveJobsUseCase : "ejecuta"
 scripts_controller ..> dependencies : "usa Depends"
 
 dependencies ..> FirestoreJobRepository : "instancia"
 dependencies ..> GmailEmailService : "instancia"
 dependencies ..> PortalClient : "instancia"
-dependencies ..> RunJobFinderUseCase : "instancia"
+dependencies ..> RunKineJobFinderUseCase : "instancia"
+dependencies ..> RunMatronJobFinderUseCase : "instancia"
+dependencies ..> CleanupInactiveJobsUseCase : "instancia"
 
-RunJobFinderUseCase --> JobRepository : "usa"
-RunJobFinderUseCase --> EmailService : "usa"
-RunJobFinderUseCase --> JobDataSource : "usa"
+RunKineJobFinderUseCase --> JobRepository : "usa"
+RunKineJobFinderUseCase --> EmailService : "usa"
+
+RunMatronJobFinderUseCase --> JobRepository : "usa"
+RunMatronJobFinderUseCase --> EmailService : "usa"
+
+CleanupInactiveJobsUseCase --> JobRepository : "usa"
 
 FirestoreJobRepository ..|> JobRepository : "implementa"
 GmailEmailService ..|> EmailService : "implementa"
 PortalClient ..|> JobDataSource : "implementa"
 
-RunJobFinderUseCase ..> config : "lee constantes"
+RunKineJobFinderUseCase ..> config : "lee constantes"
+RunMatronJobFinderUseCase ..> config : "lee constantes"
 PortalClient ..> config : "lee constantes"
 
 JobRepository ..> Job : "usa"
 JobDataSource ..> Job : "usa"
 PortalClient ..> Job : "crea"
 FirestoreJobRepository ..> Job : "usa"
-RunJobFinderUseCase ..> Job : "usa"
+RunKineJobFinderUseCase ..> Job : "usa"
+RunMatronJobFinderUseCase ..> Job : "usa"
 
 @enduml
