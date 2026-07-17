@@ -33,15 +33,15 @@ activate repo
 repo --> kineUc: list[dict] (all_items)
 deactivate repo
 
-kineUc -> kineUc: filter_jobs(all_items, KINE_PATTERN)
+kineUc -> kineUc: _filter_jobs(all_items, KINE_PATTERN)
 loop Para cada oferta
     kineUc -> repo: get_sent_job_by_url(job.url)
     activate repo
     repo -> db: Consultar doc por filtro URL
     activate db
-    db --> repo: Retorna times_sent (o None)
+    db --> repo: Retorna doc (o None)
     deactivate db
-    repo --> kineUc: Job (o None)
+    repo --> kineUc: bool (True/False)
     deactivate repo
 end
 
@@ -106,9 +106,9 @@ loop Para cada oferta
     activate repo
     repo -> db: Consultar doc por filtro URL
     activate db
-    db --> repo: Retorna times_sent (o None)
+    db --> repo: Retorna doc (o None)
     deactivate db
-    repo --> matronUc: Job (o None)
+    repo --> matronUc: bool (True/False)
     deactivate repo
 end
 

@@ -7,13 +7,9 @@ class JobRepository(ABC):
         pass
     
     @abstractmethod
-    def get_sent_job_by_url(self, url: str) -> Job | None:
+    def get_sent_job_by_url(self, url: str) -> bool:
         pass
 
     @abstractmethod
-    def increment_sent_count(self, jobs: list[Job]) -> None:
-        pass
-
-    @abstractmethod
-    def cleanup_inactive_jobs(self, active_urls: set[str]) -> None:
+    def save_job(self, job: Job) -> None:
         pass

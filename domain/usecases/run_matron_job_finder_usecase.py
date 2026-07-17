@@ -17,13 +17,8 @@ class RunMatronJobFinderUseCase:
         matron_jobs_raw = self.filter_jobs(items=all_items, pattern=config.MATRON_PATTERN)
         matron_jobs: list[Job] = []
         for job in matron_jobs_raw:
-            persisted = self.job_repository.get_sent_job_by_url(job.url)
-            if persisted:
-                if persisted.times_sent >= 2:
-                    continue
-                job.times_sent = persisted.times_sent
-            else:
-                job.times_sent = 0
+            if self.job_repository.get_sent_job_by_url(job.url):
+                continue
             matron_jobs.append(job)
 
         sender_email = self.email_service.get_sender_email()

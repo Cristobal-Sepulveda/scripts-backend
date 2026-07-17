@@ -22,11 +22,11 @@ sec --> router : 3: Verification success
 router -> kineUc : 4: execute()
 kineUc -> dbCtrl : 5: fetch_all_active_jobs()
 dbCtrl --> kineUc : 6: return all_items
-kineUc -> kineUc : 7: filter_jobs()
+kineUc -> kineUc : 7: _filter_jobs()
 kineUc -> dbCtrl : 8: get_sent_job_by_url(url)
 dbCtrl -> db : 9: Consultar por URL
 db --> dbCtrl : 10: return doc
-dbCtrl --> kineUc : 11: return Job (o None)
+dbCtrl --> kineUc : 11: return bool
 kineUc -> emailCtrl : 12: send_email()
 emailCtrl -> smtp : 13: Dispatch email via TLS
 smtp --> emailCtrl : 14: Success
