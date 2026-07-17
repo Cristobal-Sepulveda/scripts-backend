@@ -14,19 +14,19 @@ if (Es peticion local o proviene de Cloud Scheduler) then (Si)
             :Filtrar ofertas por carrera y por Provincia de Santiago (Comunas);
             fork
                 :Filtrar ofertas para Kinesiologia;
-                :Consultar en Firestore las ofertas enviadas;
-                :Filtrar aquellas con times_sent < 2;
+                :Filtrar aquellas que no han sido enviadas (no registradas en Firestore);
                 if (Hay ofertas nuevas) then (Si)
                     :Generar cuerpo de correo consolidado de Kinesiologia;
+                    :Guardar oferta nueva en Firestore (updated_at);
                 else (No)
                     :Generar cuerpo del correo "Sin ofertas nuevas";
                 endif
             fork again
                 :Filtrar ofertas para Matron/a;
-                :Consultar en Firestore las ofertas enviadas;
-                :Filtrar aquellas con times_sent < 2;
+                :Filtrar aquellas que no han sido enviadas (no registradas en Firestore);
                 if (Hay ofertas nuevas) then (Si)
                     :Generar cuerpo de correo consolidado de Matron/a;
+                    :Guardar oferta nueva en Firestore (updated_at);
                 else (No)
                     :Generar cuerpo del correo "Sin ofertas nuevas";
                 endif
@@ -35,15 +35,6 @@ if (Es peticion local o proviene de Cloud Scheduler) then (Si)
             :Conectar y autenticar en Servidor SMTP de Gmail (TLS);
             :Enviar correos consolidados a destinatarios;
             
-            if (Se enviaron ofertas nuevas de Kinesiologia) then (Si)
-                :Incrementar times_sent en Firestore;
-            endif
-            if (Se enviaron ofertas nuevas de Matrona) then (Si)
-                :Incrementar times_sent en Firestore;
-            endif
-            
-            :Limpieza de Base de Datos:
-            Eliminar de Firestore registros de ofertas cerradas;
             :Cerrar sesión SMTP;
             :Retornar HTTP 200 OK con estado "success";
         else (No)

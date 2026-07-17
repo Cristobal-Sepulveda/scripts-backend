@@ -131,3 +131,21 @@ Para automatizar la ejecución periódica de forma segura, se configuran las tar
    - **Service Account**: Selecciona la cuenta de servicio creada anteriormente (ej. `job-scheduler-invoker@genericstoreandroid.iam.gserviceaccount.com`).
    - **Audience**: Especifica la URL base asignada a tu servicio Cloud Run (ej. `https://job-finder-backend-496093823621.southamerica-west1.run.app`).
    - **Headers**: Opcionalmente, puedes continuar agregando la cabecera `X-CloudScheduler: true` para coincidir con la validación complementaria del middleware a nivel de aplicación.
+
+---
+
+## 🧪 Pruebas Automatizadas (TDD)
+
+El proyecto incluye una suite completa de pruebas automatizadas que abarca pruebas unitarias, de integración y extremo a extremo (E2E) escritas con **pytest**.
+
+### Ejecución de Pruebas
+Para ejecutar la suite de pruebas completa dentro del entorno virtual:
+```bash
+.venv/bin/pytest -v
+```
+
+### Estructura de las Pruebas
+Las pruebas se organizan en el directorio `tests/` de la siguiente forma:
+- **Pruebas Unitarias (`tests/unit/`)**: Evalúan la lógica de negocio y las validaciones de los casos de uso (`RunKineJobFinderUseCase`, `RunMatronJobFinderUseCase` y `CleanupInactiveJobsUseCase`) utilizando mocks para aislar la base de datos y el servicio de correo.
+- **Pruebas de Integración (`tests/integration/`)**: Verifican el mapeo y las llamadas a Google Cloud Firestore en `JobRepositoryImpl` simulando las respuestas de la base de datos.
+- **Pruebas E2E (`tests/e2e/`)**: Prueban de extremo a extremo las llamadas HTTP a los endpoints de FastAPI (`/scripts/run-job-finder/...`) utilizando `TestClient` de FastAPI y reemplazando las dependencias externas con mocks para evitar efectos secundarios.

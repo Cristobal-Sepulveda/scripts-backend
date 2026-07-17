@@ -26,11 +26,9 @@ package "Domain" {
             + entidad : str
             + region : str
             + ciudad : str
-            + times_sent : int
-            + active : bool
+            + updated_at : datetime
             --
             + doc_id : str
-            + can_be_sent : bool
         }
     }
 
@@ -65,7 +63,8 @@ package "Domain" {
             --
             + get_sent_job_by_url(url: str) : bool
             + save_job(job: Job) : void
-            + cleanup_inactive_jobs(active_urls: set[str]) : void
+            + fetch_all_sent_jobs() : list[Job]
+            + delete_job_by_url(url: str) : void
         }
         
         interface JobDataSource {
@@ -110,7 +109,8 @@ package "Data" {
             --
             + get_sent_job_by_url(url: str) : bool
             + save_job(job: Job) : void
-            + cleanup_inactive_jobs(active_urls: set[str]) : void
+            + fetch_all_sent_jobs() : list[Job]
+            + delete_job_by_url(url: str) : void
         }
     }
     

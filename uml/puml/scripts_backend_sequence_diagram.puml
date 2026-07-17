@@ -165,15 +165,23 @@ router -> cleanupUc: instantiate CleanupInactiveJobsUseCase(repo)
 router -> cleanupUc: execute()
 activate cleanupUc
 
-cleanupUc -> repo: fetch_all_active_jobs()
+cleanupUc -> repo: fetch_all_sent_jobs()
 activate repo
-repo --> cleanupUc: list[dict] (all_items)
+repo -> db: Obtener todas las ofertas enviadas
+activate db
+db --> repo: Retorna docs
+deactivate db
+repo --> cleanupUc: list[Job] (sent_jobs)
 deactivate repo
 
-cleanupUc -> repo: cleanup_inactive_jobs(active_urls)
-activate repo
-repo -> db: Eliminar ofertas inactivas de Firestore
-deactivate repo
+loop Para cada oferta enviada
+    alt Si guardado hace más de 1 mes (updated_at < threshold_date)
+        cleanupUc -> repo: delete_job_by_url(job.url)
+        activate repo
+        repo -> db: Eliminar documento de Firestore
+        deactivate repo
+    end
+end
 
 cleanupUc --> router: Executed successfully
 deactivate cleanupUc

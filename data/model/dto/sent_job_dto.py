@@ -1,5 +1,6 @@
 from dataclasses import dataclass, asdict
 from typing import Any
+import datetime
 
 @dataclass
 class SentJobDTO:
@@ -8,8 +9,7 @@ class SentJobDTO:
     entidad: str
     region: str
     ciudad: str
-    times_sent: int
-    active: bool
+    updated_at: datetime.datetime | None = None
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "SentJobDTO":
@@ -19,9 +19,11 @@ class SentJobDTO:
             entidad=data.get("entidad", ""),
             region=data.get("region", ""),
             ciudad=data.get("ciudad", ""),
-            times_sent=data.get("times_sent", 0),
-            active=data.get("active", True)
+            updated_at=data.get("updated_at")
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        if d["updated_at"] is None:
+            d.pop("updated_at")
+        return d

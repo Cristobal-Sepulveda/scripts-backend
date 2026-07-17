@@ -62,7 +62,7 @@ class RunKineJobFinderUseCase:
             logger.info("Correo de ofertas enviado exitosamente.")
 
     def _filter_jobs(self, jobs: list[dict], pattern: re.Pattern) -> list[Job]:
-        jobs: list[Job] = []
+        jobs_list: list[Job] = []
 
         for item in jobs:
             cargo: str = item.get("Cargo") or ""
@@ -73,7 +73,7 @@ class RunKineJobFinderUseCase:
             if pattern.search(cargo) and self._is_in_santiago_province(region=region, city=ciudad):
                 job_url: str = item.get("url") or item.get("URL")
                 if job_url:
-                    jobs.append(Job(
+                    jobs_list.append(Job(
                         cargo=cargo,
                         url=job_url,
                         entidad=entidad,
@@ -81,7 +81,7 @@ class RunKineJobFinderUseCase:
                         ciudad=ciudad
                     ))
 
-        return jobs
+        return jobs_list
 
     def _is_in_santiago_province(self, region: str, city: str) -> bool:
         if not region or not city:

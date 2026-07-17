@@ -43,9 +43,11 @@ matronUc -> emailCtrl : 22: send_email()
 
 == Flujo 3: Mantenimiento (GET /scripts/run-job-finder/cleanup) ==
 router -> cleanupUc : 23: execute()
-cleanupUc -> dbCtrl : 24: fetch_all_active_jobs()
-dbCtrl --> cleanupUc : 25: return all_items
-cleanupUc -> dbCtrl : 26: cleanup_inactive_jobs(active_urls)
-dbCtrl -> db : 27: Delete documents of closed jobs
+cleanupUc -> dbCtrl : 24: fetch_all_sent_jobs()
+dbCtrl -> db : 25: Stream all sent jobs
+db --> dbCtrl : 26: Return documents
+dbCtrl --> cleanupUc : 27: Return list[Job]
+cleanupUc -> dbCtrl : 28: delete_job_by_url(url)
+dbCtrl -> db : 29: Delete document by URL
 
 @enduml

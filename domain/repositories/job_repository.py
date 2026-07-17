@@ -1,3 +1,4 @@
+import datetime
 from abc import ABC, abstractmethod
 from domain.entities.job import Job
 
@@ -15,5 +16,9 @@ class JobRepository(ABC):
         pass
 
     @abstractmethod
-    def cleanup_inactive_jobs(self, active_urls: set[str]) -> None:
+    def fetch_all_sent_jobs(self) -> list[Job]:
+        pass
+
+    @abstractmethod
+    def delete_job_by_url(self, url: str) -> None:
         pass
