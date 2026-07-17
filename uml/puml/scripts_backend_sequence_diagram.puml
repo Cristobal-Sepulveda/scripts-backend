@@ -43,6 +43,12 @@ loop Para cada oferta
     deactivate db
     repo --> kineUc: bool (True/False)
     deactivate repo
+    alt Si no fue enviado (False)
+        kineUc -> repo: save_job(job)
+        activate repo
+        repo -> db: Guardar documento en Firestore
+        deactivate repo
+    end
 end
 
 kineUc -> mail: Context Manager: __enter__()
@@ -62,10 +68,6 @@ alt Hay ofertas de Kinesiólogo a enviar
     mail --> kineUc: true
     deactivate mail
     
-    kineUc -> repo: increment_sent_count(kine_jobs)
-    activate repo
-    repo -> db: Guardar/Incrementar times_sent
-    deactivate repo
 end
 
 kineUc -> mail: Context Manager: __exit__()
@@ -100,7 +102,7 @@ activate repo
 repo --> matronUc: list[dict] (all_items)
 deactivate repo
 
-matronUc -> matronUc: filter_jobs(all_items, MATRON_PATTERN)
+matronUc -> matronUc: _filter_jobs(all_items, MATRON_PATTERN)
 loop Para cada oferta
     matronUc -> repo: get_sent_job_by_url(job.url)
     activate repo
@@ -110,6 +112,12 @@ loop Para cada oferta
     deactivate db
     repo --> matronUc: bool (True/False)
     deactivate repo
+    alt Si no fue enviado (False)
+        matronUc -> repo: save_job(job)
+        activate repo
+        repo -> db: Guardar documento en Firestore
+        deactivate repo
+    end
 end
 
 matronUc -> mail: Context Manager: __enter__()
@@ -129,10 +137,6 @@ alt Hay ofertas de Matrón(a) a enviar
     mail --> matronUc: true
     deactivate mail
     
-    matronUc -> repo: increment_sent_count(matron_jobs)
-    activate repo
-    repo -> db: Guardar/Incrementar times_sent
-    deactivate repo
 end
 
 matronUc -> mail: Context Manager: __exit__()

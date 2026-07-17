@@ -23,7 +23,7 @@ class RunKineJobFinderUseCase:
 
         logger.info(f"Se obtuvieron {len(newest_empleos_publicos_jobs)} ofertas activas del portal público.")
 
-        parsed_kine_jobs_list = self.filter_jobs(
+        parsed_kine_jobs_list = self._filter_jobs(
             jobs=newest_empleos_publicos_jobs, 
             pattern=config.KINE_PATTERN
         )
@@ -61,16 +61,16 @@ class RunKineJobFinderUseCase:
         else:
             logger.info("Correo de ofertas enviado exitosamente.")
 
-    def filter_jobs(self, jobs: list[dict], pattern: re.Pattern) -> list[Job]:
+    def _filter_jobs(self, jobs: list[dict], pattern: re.Pattern) -> list[Job]:
         jobs: list[Job] = []
-        
+
         for item in jobs:
             cargo: str = item.get("Cargo") or ""
             entidad: str = item.get("Institución / Entidad") or ""
             region: str = item.get("Región") or ""
             ciudad: str = item.get("Ciudad") or ""
 
-            if pattern.search(cargo) and self.is_in_santiago_province(region=region, city=ciudad):
+            if pattern.search(cargo) and self._is_in_santiago_province(region=region, city=ciudad):
                 job_url: str = item.get("url") or item.get("URL")
                 if job_url:
                     jobs.append(Job(
@@ -83,7 +83,7 @@ class RunKineJobFinderUseCase:
 
         return jobs
 
-    def is_in_santiago_province(self, region: str, city: str) -> bool:
+    def _is_in_santiago_province(self, region: str, city: str) -> bool:
         if not region or not city:
             return False
 

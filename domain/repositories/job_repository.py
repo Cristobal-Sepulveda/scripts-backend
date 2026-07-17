@@ -13,3 +13,7 @@ class JobRepository(ABC):
     @abstractmethod
     def save_job(self, job: Job) -> None:
         pass
+
+    @abstractmethod
+    def cleanup_inactive_jobs(self, active_urls: set[str]) -> None:
+        pass

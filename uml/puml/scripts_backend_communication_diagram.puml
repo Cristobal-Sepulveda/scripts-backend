@@ -27,19 +27,19 @@ kineUc -> dbCtrl : 8: get_sent_job_by_url(url)
 dbCtrl -> db : 9: Consultar por URL
 db --> dbCtrl : 10: return doc
 dbCtrl --> kineUc : 11: return bool
-kineUc -> emailCtrl : 12: send_email()
-emailCtrl -> smtp : 13: Dispatch email via TLS
-smtp --> emailCtrl : 14: Success
-emailCtrl --> kineUc : 15: return is_sent_ok
-kineUc -> dbCtrl : 16: increment_sent_count(sent_jobs)
-dbCtrl -> db : 17: update/increment doc (times_sent)
+kineUc -> dbCtrl : 12: save_job(job)
+dbCtrl -> db : 13: Guardar en colección sent_jobs
+kineUc -> emailCtrl : 14: send_email()
+emailCtrl -> smtp : 15: Dispatch email via TLS
+smtp --> emailCtrl : 16: Success
+emailCtrl --> kineUc : 17: return is_sent_ok
 
 == Flujo 2: Matronería (GET /scripts/run-job-finder/matroneria) ==
 router -> matronUc : 18: execute()
 matronUc -> dbCtrl : 19: fetch_all_active_jobs()
 matronUc -> dbCtrl : 20: get_sent_job_by_url(url)
-matronUc -> emailCtrl : 21: send_email()
-matronUc -> dbCtrl : 22: increment_sent_count(sent_jobs)
+matronUc -> dbCtrl : 21: save_job(job)
+matronUc -> emailCtrl : 22: send_email()
 
 == Flujo 3: Mantenimiento (GET /scripts/run-job-finder/cleanup) ==
 router -> cleanupUc : 23: execute()

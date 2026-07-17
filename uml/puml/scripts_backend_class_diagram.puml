@@ -48,9 +48,9 @@ package "Domain" {
             - job_repository : JobRepository
             - email_service : EmailService
             --
-            + execute() : list[Job]
-            + filter_jobs(items: list[dict], pattern: Pattern) : list[Job]
-            + is_in_santiago_province(region: str, city: str) : bool
+            + execute() : void
+            - _filter_jobs(jobs: list[dict], pattern: Pattern) : list[Job]
+            - _is_in_santiago_province(region: str, city: str) : bool
         }
 
         class CleanupInactiveJobsUseCase {
@@ -64,7 +64,7 @@ package "Domain" {
         interface JobRepository {
             --
             + get_sent_job_by_url(url: str) : bool
-            + increment_sent_count(jobs: list[Job]) : void
+            + save_job(job: Job) : void
             + cleanup_inactive_jobs(active_urls: set[str]) : void
         }
         
@@ -109,7 +109,7 @@ package "Data" {
             - db : FirestoreClient
             --
             + get_sent_job_by_url(url: str) : bool
-            + increment_sent_count(jobs: list[Job]) : void
+            + save_job(job: Job) : void
             + cleanup_inactive_jobs(active_urls: set[str]) : void
         }
     }
