@@ -4,17 +4,17 @@ from data.repositories.job_repository_impl import JobRepositoryImpl
 from domain.entities.job import Job
 
 def test_get_sent_job_by_url_exists():
-    # given
+    # Arrange
     db = MagicMock()
     mock_query = MagicMock()
     mock_query.get.return_value = [MagicMock()]
     db.collection.return_value.where.return_value = mock_query
     repo = JobRepositoryImpl(db)
 
-    # when
+    # Act
     result = repo.get_sent_job_by_url("http://example.com")
 
-    # then
+    # Assert
     assert result is True
     db.collection.assert_called_once_with("sent_jobs")
     db.collection.return_value.where.assert_called_once_with(
@@ -24,21 +24,21 @@ def test_get_sent_job_by_url_exists():
     )
 
 def test_get_sent_job_by_url_not_exists():
-    # given
+    # Arrange
     db = MagicMock()
     mock_query = MagicMock()
     mock_query.get.return_value = []
     db.collection.return_value.where.return_value = mock_query
     repo = JobRepositoryImpl(db)
 
-    # when
+    # Act
     result = repo.get_sent_job_by_url("http://example.com")
 
-    # then
+    # Assert
     assert result is False
 
 def test_save_job():
-    # given
+    # Arrange
     db = MagicMock()
     mock_doc = MagicMock()
     db.collection.return_value.document.return_value = mock_doc
@@ -52,15 +52,15 @@ def test_save_job():
         updated_at=None
     )
 
-    # when
+    # Act
     repo.save_job(job)
 
-    # then
+    # Assert
     db.collection.assert_called_once_with("sent_jobs")
     mock_doc.set.assert_called_once()
 
 def test_fetch_all_sent_jobs():
-    # given
+    # Arrange
     db = MagicMock()
     mock_doc1 = MagicMock()
     mock_doc1.to_dict.return_value = {
@@ -74,16 +74,16 @@ def test_fetch_all_sent_jobs():
     db.collection.return_value.stream.return_value = [mock_doc1]
     repo = JobRepositoryImpl(db)
 
-    # when
+    # Act
     jobs = repo.fetch_all_sent_jobs()
 
-    # then
+    # Assert
     assert len(jobs) == 1
     assert jobs[0].url == "http://example.com/1"
     assert jobs[0].cargo == "Cargo 1"
 
 def test_delete_job_by_url():
-    # given
+    # Arrange
     db = MagicMock()
     mock_doc1 = MagicMock()
     mock_doc1.id = "doc123"
@@ -96,9 +96,9 @@ def test_delete_job_by_url():
     
     repo = JobRepositoryImpl(db)
 
-    # when
+    # Act
     repo.delete_job_by_url("http://example.com")
 
-    # then
+    # Assert
     db.collection.return_value.document.assert_called_once_with("doc123")
     mock_doc_ref.delete.assert_called_once()

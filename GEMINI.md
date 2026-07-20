@@ -79,3 +79,6 @@ Al finalizar cada turno (sea de avance intermedio o de cierre final), debes estr
 1. **Resumen Técnico:** Detalle de los cambios por capa (Domain, Data, Presentation, UI, Infrastructure, etc.).
 2. **Estructura Visual:** Representar el árbol de archivos (árbol de directorios modificado) indicando claramente qué archivos son `(Nuevo)` y cuáles `(Modificado)` o eliminados.
 3. **Reporte y Condiciones de Cierre:** Detalle del éxito o fracaso de las pruebas unitarias, sintaxis, compilación o scripts de verificación.
+
+## Consideraciones: Elaboración de Tests
+1) Todos mis test deben seguir la lógica de Arrange, Act, Assert.

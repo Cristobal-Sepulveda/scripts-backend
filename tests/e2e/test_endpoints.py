@@ -19,7 +19,7 @@ app.dependency_overrides[verify_security_from_google_cloud_scheduler_task] = lam
 client = TestClient(app)
 
 def test_run_kinesiologia_endpoint_success():
-    # given
+    # Arrange
     mock_repo.fetch_all_active_jobs.return_value = [
         {
             "Cargo": "Kinesiólogo",
@@ -33,15 +33,15 @@ def test_run_kinesiologia_endpoint_success():
     mock_email.get_sender_email.return_value = "sender@example.com"
     mock_email.send_email.return_value = True
 
-    # when
+    # Act
     response = client.get("/scripts/run-job-finder/kinesiologia")
 
-    # then
+    # Assert
     assert response.status_code == 200
     assert response.json()["status"] == "success"
 
 def test_run_matroneria_endpoint_success():
-    # given
+    # Arrange
     mock_repo.fetch_all_active_jobs.return_value = [
         {
             "Cargo": "Matrona",
@@ -55,15 +55,15 @@ def test_run_matroneria_endpoint_success():
     mock_email.get_sender_email.return_value = "sender@example.com"
     mock_email.send_email.return_value = True
 
-    # when
+    # Act
     response = client.get("/scripts/run-job-finder/matroneria")
 
-    # then
+    # Assert
     assert response.status_code == 200
     assert response.json()["status"] == "success"
 
 def test_run_cleanup_endpoint_success():
-    # given
+    # Arrange
     mock_repo.fetch_all_sent_jobs.return_value = [
         Job(
             cargo="Cargo",
@@ -75,9 +75,9 @@ def test_run_cleanup_endpoint_success():
         )
     ]
 
-    # when
+    # Act
     response = client.get("/scripts/run-job-finder/cleanup")
 
-    # then
+    # Assert
     assert response.status_code == 200
     assert response.json()["status"] == "success"

@@ -6,22 +6,22 @@ from domain.services.email_service import EmailService
 from domain.exceptions.domain_exception import EmailDispatchError
 
 def test_execute_no_active_jobs():
-    # given
+    # Arrange
     repo = MagicMock(spec=JobRepository)
     repo.fetch_all_active_jobs.return_value = []
     email = MagicMock(spec=EmailService)
     usecase = RunKineJobFinderUseCase(job_repository=repo, email_service=email)
 
-    # when
+    # Act
     usecase.execute()
 
-    # then
+    # Assert
     repo.fetch_all_active_jobs.assert_called_once()
     repo.get_sent_job_by_url.assert_not_called()
     email.send_email.assert_not_called()
 
 def test_execute_no_matching_jobs():
-    # given
+    # Arrange
     repo = MagicMock(spec=JobRepository)
     repo.fetch_all_active_jobs.return_value = [
         {
@@ -35,16 +35,16 @@ def test_execute_no_matching_jobs():
     email = MagicMock(spec=EmailService)
     usecase = RunKineJobFinderUseCase(job_repository=repo, email_service=email)
 
-    # when
+    # Act
     usecase.execute()
 
-    # then
+    # Assert
     repo.fetch_all_active_jobs.assert_called_once()
     repo.get_sent_job_by_url.assert_not_called()
     email.send_email.assert_not_called()
 
 def test_execute_already_sent_jobs():
-    # given
+    # Arrange
     repo = MagicMock(spec=JobRepository)
     repo.fetch_all_active_jobs.return_value = [
         {
@@ -59,16 +59,16 @@ def test_execute_already_sent_jobs():
     email = MagicMock(spec=EmailService)
     usecase = RunKineJobFinderUseCase(job_repository=repo, email_service=email)
 
-    # when
+    # Act
     usecase.execute()
 
-    # then
+    # Assert
     repo.get_sent_job_by_url.assert_called_once_with("http://example.com/kine")
     repo.save_job.assert_not_called()
     email.send_email.assert_not_called()
 
 def test_execute_send_success():
-    # given
+    # Arrange
     repo = MagicMock(spec=JobRepository)
     repo.fetch_all_active_jobs.return_value = [
         {
@@ -85,15 +85,15 @@ def test_execute_send_success():
     email.send_email.return_value = True
     usecase = RunKineJobFinderUseCase(job_repository=repo, email_service=email)
 
-    # when
+    # Act
     usecase.execute()
 
-    # then
+    # Assert
     repo.save_job.assert_called_once()
     email.send_email.assert_called_once()
 
 def test_execute_send_email_error():
-    # given
+    # Arrange
     repo = MagicMock(spec=JobRepository)
     repo.fetch_all_active_jobs.return_value = [
         {
@@ -110,6 +110,6 @@ def test_execute_send_email_error():
     email.send_email.return_value = False
     usecase = RunKineJobFinderUseCase(job_repository=repo, email_service=email)
 
-    # when / then
+    # Act / Assert
     with pytest.raises(EmailDispatchError):
         usecase.execute()
